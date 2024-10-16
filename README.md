@@ -1,86 +1,193 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Blockchain Price Tracker
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project is a blockchain price tracking system built using Nest.js. It fetches the latest prices of Ethereum and Polygon, stores them in a PostgreSQL database, and provides APIs for setting alerts, getting price histories, and swapping rates between cryptocurrencies. The project also includes email alerts when certain conditions are met, such as price alerts set by users.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- **Track Prices**: Periodically fetches Ethereum and Polygon prices from the CoinGecko API every 5 minutes.
+- **Price Alerts**: Users can set price alerts for specific thresholds. An email is sent when the tracked cryptocurrency reaches the specified price.
+- **Price History**: Provides an API to retrieve hourly prices for the last 24 hours.
+- **Swap Rate**: Calculates swap rates between Ethereum (ETH) and Bitcoin (BTC).
+- **Email Notifications**: Sends notifications when price changes exceed thresholds (e.g., a 3% change within an hour) or when user-defined alerts are triggered.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Technologies Used
 
-## Project setup
+- **Backend Framework**: [Nest.js](https://nestjs.com/)
+- **Database**: PostgreSQL
+- **ORM**: TypeORM
+- **Scheduler**: Nest.js Cron Jobs
+- **Email Service**: Nodemailer (for sending alert emails)
+- **APIs**: CoinGecko API for fetching cryptocurrency prices
+- **Containerization**: Docker
 
-```bash
-$ npm install
+## Prerequisites
+
+Before you start, make sure you have the following installed:
+
+- [Node.js](https://nodejs.org/) (v14.x or above)
+- [Docker](https://www.docker.com/) (for PostgreSQL and Docker Compose)
+- [PostgreSQL](https://www.postgresql.org/) (if not using Docker)
+
+## Setup Instructions
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/shashank9694/blockchain-price-tracker.git
+   cd blockchain-price-tracker
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+3. **Setup environment variables:**
+
+   Create a `.env` file in the root of the project and add your environment variables (for database connection, email service, etc.)(right now db config will be static ):
+
+   ```
+   DATABASE_HOST=localhost
+   DATABASE_PORT=5432
+   DATABASE_USER=your-db-user
+   DATABASE_PASSWORD=your-db-password
+   DATABASE_NAME=prices
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASSWORD=your-email-password
+   ```
+
+4. **Run PostgreSQL using Docker:**
+
+   If you're using Docker, you can use Docker Compose to quickly set up the PostgreSQL instance:
+
+   ```bash
+   docker-compose up -d
+   ```
+
+   This will spin up a PostgreSQL container with the appropriate configuration.
+
+5. **Run the application:**
+
+   ```bash
+   npm run start
+   ```
+
+   The application will start on `http://localhost:3000`.
+
+6. **Database Synchronization:**
+
+   The application uses TypeORM to sync the entities with your database. The entities for prices and alerts will be automatically created.
+
+## API Endpoints
+
+### 1. **Set a Price Alert**
+
+   Set an alert for a specific cryptocurrency price.
+
+   - **Endpoint**: `POST /prices/set-alert`
+   - **Body**:
+     ```json
+     {
+       "chain": "ethereum",
+       "price": 1000,
+       "email": "user@example.com"
+     }
+     ```
+
+   - **Response**:
+     ```json
+     {
+       "message": "Alert set for ethereum at $1000"
+     }
+     ```
+
+### 2. **Get Hourly Prices**
+
+   Fetch hourly prices for Ethereum and Polygon for the last 24 hours.
+
+   - **Endpoint**: `GET /prices/hourly`
+   - **Response**:
+     ```json
+     [
+       {
+         "chain": "ethereum",
+         "price": 1200,
+         "timestamp": "2024-10-16T05:00:00.000Z"
+       },
+       {
+         "chain": "polygon",
+         "price": 1.2,
+         "timestamp": "2024-10-16T05:00:00.000Z"
+       }
+     ]
+     ```
+
+### 3. **Get Swap Rate**
+
+   Get the swap rate from Ethereum (ETH) to Bitcoin (BTC).
+
+   - **Endpoint**: `POST /prices/swap-rate`
+   - **Body**:
+     ```json
+     {
+       "ethAmount": 1
+     }
+     ```
+
+   - **Response**:
+     ```json
+     {
+       "btcAmount": 0.03,
+       "fee": {
+         "eth": 0.03,
+         "usd": 36
+       }
+     }
+     ```
+
+## Project Structure
+
+```
+src/
+ ├── alerts/
+ │   └── entities/
+ │       └── alert.entity.ts  # Alert entity for storing user-defined price alerts
+ ├── common/
+ │   └── email.service.ts      # Email service for sending alerts
+ ├── prices/
+ │   ├── entities/
+ │   │   └── price.entity.ts   # Price entity for storing fetched prices
+ │   ├── prices.controller.ts  # Controller for price-related endpoints
+ │   └── prices.service.ts     # Service for fetching prices and handling alerts
+ └── app.module.ts             # Main application module
 ```
 
-## Compile and run the project
+## Cron Jobs
 
-```bash
-# development
-$ npm run start
+The application uses cron jobs to fetch Ethereum and Polygon prices every 5 minutes and store them in the database.
 
-# watch mode
-$ npm run start:dev
+- **Job Schedule**: `*/5 * * * *` (every 5 minutes)
+- **Functionality**:
+  - Fetch prices from the CoinGecko API.
+  - Check if price alerts need to be triggered.
+  - Send email notifications when necessary.
 
-# production mode
-$ npm run start:prod
-```
+## Running with Docker
 
-## Run tests
+If you prefer to run the entire application (including PostgreSQL) using Docker, use the following commands:
 
-```bash
-# unit tests
-$ npm run test
+1. **Build and run the Docker containers:**
 
-# e2e tests
-$ npm run test:e2e
+   ```bash
+   docker-compose up --build
+   ```
 
-# test coverage
-$ npm run test:cov
-```
+   This will build the application and run it inside a container along with PostgreSQL.
 
-## Resources
+2. **Access the application:**
 
-Check out a few resources that may come in handy when working with NestJS:
+   The application will be accessible on `http://localhost:3000/api`.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
